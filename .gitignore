@@ -1,0 +1,48 @@
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+
+# VS Code settings
+.vscode/
+
+# ASP.NET Core environment files
+appsettings.*.json
+
+# .NET Core project lock files
+project.lock.json
+project.fragment.lock.json
+
+# Logs
+*.log
+
+# Secrets (you should use user secrets or secure storage)
+secrets.json
+
+# Npm packages
+node_modules/
+
+# Bundle output
+wwwroot/dist/
+wwwroot/lib/
+
+# Other
+*.db
+*.sqlite
+*.pdb
+*.mdb
+*.cache
+*.vspscc
+*.vssscc
+
+# Rider / JetBrains IDEs
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
