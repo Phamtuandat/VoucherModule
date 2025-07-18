@@ -1,0 +1,58 @@
+name: CI/CD - Voucher System
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧾 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: 🔧 Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: ⚡ Cache NuGet packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: 🔍 Check required secrets
+        run: |
+          [ -z "${{ secrets.DB_PASSWORD }}" ] && echo "❌ Missing DB_PASSWORD" && exit 1
+          [ -z "${{ secrets.JWT_KEY }}" ] && echo "❌ Missing JWT_KEY" && exit 1
+
+      - name: ⚙️ Inject secrets into .env file
+        run: |
+          echo "ASPNETCORE_ENVIRONMENT=Development" >> .env
+          echo "ASPNETCORE_URLS=http://+:80" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_CONNECTION=Server=sqlserver;Database=AuthDb;User=sa;Password=${{ secrets.DB_PASSWORD }};TrustServerCertificate=true;" >> .env
+          echo "JWT_KEY=${{ secrets.JWT_KEY }}" >> .env
+          echo "JWT_ISSUER=http://authenticationapi:80" >> .env
+          echo "JWT_AUDIENCE=voucher" >> .env
+
+      - name: 🛠 Build and start services with Docker Compose
+        run: docker-compose --env-file .env up -d --build
+
+      - name: ✅ Run integration tests (optional)
+        run: docker-compose exec -T authenticationapi dotnet test
+
+      - name: 🧹 Clean up containers
+        if: always()
+        run: docker-compose down
