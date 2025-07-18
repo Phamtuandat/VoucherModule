@@ -40,16 +40,17 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 var app = builder.Build();
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
-    // log the database connection string for debugging purposes
-    Console.WriteLine($"Using connection string: {dbContext.Database.GetDbConnection().ConnectionString}");
-    dbContext.Database.Migrate(); // ⚡ Auto apply migrations
-}
+
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Seed data and migrate database
+
+app.MapGet("/seed", (IHost host) =>
+{
+    host.EnsureDatabaseMigratedAndSeeded();
+    return Results.Ok("Seeded manually");
+});
 
 // Login endpoint
 app.MapPost("/login", async (
@@ -57,13 +58,26 @@ app.MapPost("/login", async (
     IUserService userService,
     ITokenService tokenService) =>
 {
+    Console.WriteLine("➡️  Login endpoint hit");
+    Console.WriteLine($"🧾 Username: {login.Username}");
+
     var user = await userService.GetByUsernameAsync(login.Username);
     if (user is null)
+    {
+        Console.WriteLine("❌ User not found.");
         return Results.Unauthorized();
+    }
+
+    Console.WriteLine("✅ User found in DB. Verifying password...");
 
     var isValid = userService.VerifyPassword(login.Password, user.PasswordHash);
     if (!isValid)
+    {
+        Console.WriteLine("❌ Invalid password.");
         return Results.Unauthorized();
+    }
+
+    Console.WriteLine("✅ Password valid. Generating token...");
 
     var token = tokenService.GenerateToken(
         user.Id.ToString(),
@@ -71,7 +85,10 @@ app.MapPost("/login", async (
         user.Role,
         DateTime.UtcNow.AddHours(1));
 
+    Console.WriteLine("✅ Token generated successfully.");
+
     return Results.Ok(new { token });
-});
+}).AllowAnonymous();
+
 
 app.Run();

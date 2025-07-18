@@ -4,3 +4,4 @@ global using AuthenticationAPI.Data;
 global using Microsoft.EntityFrameworkCore;
 global using AuthenticationAPI.Enums;
 global using AuthenticationAPI.Settings;
+global using AuthenticationAPI.Extensions;

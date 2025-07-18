@@ -19,7 +19,7 @@ public class UserService : IUserService
 
     public async Task<User> CreateAsync(User user, string password)
     {
-        user.PasswordHash = HashPassword(password);
+        user.PasswordHash = PasswordHasher.HashPassword(password);
         _db.Users.Add(user);
         await _db.SaveChangesAsync();
         return user;
@@ -27,17 +27,8 @@ public class UserService : IUserService
 
     public bool VerifyPassword(string password, string passwordHash)
     {
-        return HashPassword(password) == passwordHash;
+        return PasswordHasher.HashPassword(password) == passwordHash;
     }
 
-    public string HashPassword(string password)
-    {
-        byte[] salt = Encoding.UTF8.GetBytes("static-salt-123"); // nên dùng salt ngẫu nhiên và lưu riêng
-        var hashed = Convert.ToBase64String(KeyDerivation.Pbkdf2(
-            password, salt,
-            KeyDerivationPrf.HMACSHA256,
-            iterationCount: 10000,
-            numBytesRequested: 256 / 8));
-        return hashed;
-    }
+   
 }
