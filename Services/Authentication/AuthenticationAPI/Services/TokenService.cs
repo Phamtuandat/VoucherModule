@@ -22,7 +22,7 @@ namespace AuthenticationAPI.Services
                 new Claim(JwtRegisteredClaimNames.Sub, userId),
                 new Claim(ClaimTypes.Name, userName),
                 new Claim(ClaimTypes.Role, role.ToString()),
-                new Claim("scope", role == UserRole.Admin ? "voucher:write voucher:apply" : "voucher:read")
+                new Claim("scope", role == UserRole.Admin ? "voucher:write voucher:read voucher:apply read:users" : "voucher:read")
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Key));

@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+option csharp_namespace = "VoucherGrpc";
+
+package voucher;
+
+service Voucher {
+  rpc CreateVoucher (CreateVoucherRequest) returns (VoucherResponse);
+  rpc RedeemVoucher (RedeemVoucherRequest) returns (VoucherResponse);
+  rpc GetVoucherStatus (VoucherStatusRequest) returns (VoucherResponse);
+  rpc GetAllVouchers (Empty) returns (VoucherListResponse);
+  rpc MigrateDatabase (Empty) returns (MigrationResponse);
+}
+
+message CreateVoucherRequest {
+  string code = 1;
+  double amount = 2;
+}
+
+message RedeemVoucherRequest {
+  string code = 1;
+}
+
+message VoucherStatusRequest {
+  string code = 1;
+}
+
+message VoucherResponse {
+  string code = 1;
+  double amount = 2;
+  bool isRedeemed = 3;
+  string message = 4;
+}
+message Empty {}
+
+message MigrationResponse {
+  bool success = 1;
+  string message = 2;
+}
+message VoucherListResponse {
+  repeated VoucherResponse vouchers = 1;
+}

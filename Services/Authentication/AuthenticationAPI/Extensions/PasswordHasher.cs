@@ -34,6 +34,9 @@ namespace AuthenticationAPI.Extensions
                 prf: KeyDerivationPrf.HMACSHA256,
                 iterationCount: 10000,
                 numBytesRequested: 32);
+            Console.WriteLine($"Stored: {stored}");
+            Console.WriteLine($"Salt Length: {salt.Length}, Expected Hash Length: {expectedHash.Length}");
+            Console.WriteLine($"Actual Hash: {Convert.ToBase64String(actualHash)}");
 
             return CryptographicOperations.FixedTimeEquals(expectedHash, actualHash);
         }

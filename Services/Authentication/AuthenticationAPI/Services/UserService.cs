@@ -27,8 +27,12 @@ public class UserService : IUserService
 
     public bool VerifyPassword(string password, string passwordHash)
     {
-        return PasswordHasher.HashPassword(password) == passwordHash;
+        return PasswordHasher.VerifyPassword(password, passwordHash);
     }
 
-   
+    public async Task<IEnumerable<User>> GetAllUsersAsync()
+    {
+        return await _db.Users.ToListAsync();
+    }
+
 }

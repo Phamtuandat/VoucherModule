@@ -1,31 +1,33 @@
-﻿namespace AuthenticationAPI.Extensions
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace AuthenticationAPI.Extensions
 {
     public static class DatabaseMigrationExtensions
     {
-        public static IHost EnsureDatabaseMigratedAndSeeded(this IHost app)
+        public static async Task<IHost> EnsureDatabaseMigratedAndSeeded(this IHost app)
         {
             using var scope = app.Services.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
 
-            context.Database.Migrate();
+            // Apply migrations
+            await context.Database.MigrateAsync();
 
-            // 🍩 Seed yummy data
-            if (context.Users.Any(x => x.Username.Contains("yummy")) || !context.Users.Any())
+            // Seed users if none exist
+            if (!await context.Users.AnyAsync())
             {
-                
-                List<User> yummyUsers = context.Users.Where(x => x.Username.Contains("yummy"))
-                    .ToList();
-                context.Users.RemoveRange(yummyUsers);
-
-                context.Users.AddRange(
+                var users = new List<User>
+                {
                     new User
                     {
                         Username = "yummyadmin",
                         PasswordHash = PasswordHasher.HashPassword("admin123"),
                         Role = UserRole.Admin,
-                        Email = "yummyadmin@test.example",
-                        
-                        
+                        Email = "yummyadmin@test.example"
                     },
                     new User
                     {
@@ -34,8 +36,28 @@
                         Role = UserRole.User,
                         Email = "yummyuser@test.example"
                     }
-                );
-                context.SaveChanges();
+                };
+
+                await context.Users.AddRangeAsync(users);
+                await context.SaveChangesAsync();
+            }
+
+            return app;
+        }
+
+        public static async Task<IHost> ClearSeedData(this IHost app)
+        {
+            using var scope = app.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
+
+            var yummyUsers = await context.Users
+                .Where(x => x.Username.Contains("yummy"))
+                .ToListAsync();
+
+            if (yummyUsers.Any())
+            {
+                context.Users.RemoveRange(yummyUsers);
+                await context.SaveChangesAsync();
             }
 
             return app;

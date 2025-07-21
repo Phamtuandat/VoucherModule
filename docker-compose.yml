@@ -10,7 +10,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=${ASPNETCORE_URLS}
-      - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
+      - ConnectionStrings__DefaultConnection=${AUTH_CONNECTION}
       - Jwt__Key=${JWT_KEY}
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=${JWT_AUDIENCE}
@@ -23,7 +23,7 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: sqlserver
     environment:
-      SA_PASSWORD: ${DB_PASSWORD}
+      SA_PASSWORD: ${AUTH_PASSWORD}
       ACCEPT_EULA: "Y"
     ports:
       - "1433:1433"
@@ -31,10 +31,46 @@ services:
       - sqlserver_data:/var/opt/mssql
     networks:
       - voucher-network
+  
+  postgres:
+    image: postgres:16
+    container_name: voucher_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${PG_DB}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - voucher-network
+
+  vouchergrpc:
+    image: ${DOCKER_REGISTRY-}vouchergrpc
+    build:
+      context: .
+      dockerfile: Services/Voucher/VoucherGrpc/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_URLS=${ASPNETCORE_URLS}
+      - ConnectionStrings__DefaultConnection=${PG_CONNECTION}
+      - Jwt__Key=${JWT_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+    depends_on:
+      - postgres
+    ports:
+      - "5001:80"
+    networks:
+      - voucher-network
 
 volumes:
   sqlserver_data:
+  postgres_data:
 
 networks:
   voucher-network:
     driver: bridge
+
