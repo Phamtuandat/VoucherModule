@@ -69,6 +69,10 @@ builder.Services.AddAuthorization(options =>
     });
 });
 
+builder.Services.AddRabbitMqWithConsumers(cfg =>
+{
+    cfg.AddConsumer<UserRegisteredConsumer>();
+});
 
 var app = builder.Build();
 app.UseAuthentication();
