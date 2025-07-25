@@ -5,7 +5,8 @@
         User,
         Admin,
         Moderator,
-        Support
+        Support,
+        Manager
     }
 
 }

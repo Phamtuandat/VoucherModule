@@ -1,4 +1,5 @@
 ﻿using MassTransit;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 
@@ -6,7 +7,7 @@ namespace BuildingBlocks.Messaging
 {
     public static class MassTransitExtensions
     {
-        public static IServiceCollection AddRabbitMqWithConsumers(this IServiceCollection services, Action<IBusRegistrationConfigurator> configAction)
+        public static IServiceCollection AddRabbitMqWithConsumers(this IServiceCollection services, Action<IBusRegistrationConfigurator> configAction, IConfiguration configuration)
         {
             services.AddMassTransit(x =>
             {
@@ -14,10 +15,10 @@ namespace BuildingBlocks.Messaging
 
                 x.UsingRabbitMq((ctx, cfg) =>
                 {
-                    cfg.Host("rabbitmq", "/", h =>
+                    cfg.Host(configuration["RabbitMq:Host"], "/", h =>
                     {
-                        h.Username("guest");
-                        h.Password("guest");
+                        h.Username(configuration["RabbitMq:Username"]);
+                        h.Password(configuration["RabbitMq:Password"]);
                     });
 
                     cfg.ConfigureEndpoints(ctx);

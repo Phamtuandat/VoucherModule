@@ -17,10 +17,7 @@ builder.Services.AddLogging(logging =>
 builder.Services.AddDbContext<VoucherDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ListenAnyIP(80);
-});
+builder.Services.AddScoped<IVoucherService, VoucherService>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -72,6 +69,10 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddRabbitMqWithConsumers(cfg =>
 {
     cfg.AddConsumer<UserRegisteredConsumer>();
+}, builder.Configuration);
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(80);
 });
 
 var app = builder.Build();

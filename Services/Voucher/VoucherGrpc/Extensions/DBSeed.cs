@@ -15,53 +15,35 @@ namespace VoucherGrpc.Extensions
                         Id = Guid.NewGuid(),
                         CodePrefix = "WELCOME10",
                         DisplayName = "Welcome Discount",
+                        Description = "10% off for new users",
                         DiscountAmount = 10,
-                        DiscountType = "percent",
+                        DiscountType = DiscountType.Percent, 
                         ValidDays = 7,
                         AutoIssue = true,
-                        RuleJson = "{ \"user.isNew\": true }",
-                        CreatedAt = DateTime.UtcNow
+                        RuleJson = "{ \"user.isNew\": true }", 
+                        CreatedAt = DateTime.UtcNow,
+                        ExpiryDate = DateTime.UtcNow.AddDays(7)
                     },
                     new VoucherTemplate
                     {
                         Id = Guid.NewGuid(),
-                        CodePrefix = "HOLIDAY25",
-                        DisplayName = "Holiday Promo",
-                        DiscountAmount = 25,
-                        DiscountType = "fixed",
-                        ValidDays = 5,
+                        CodePrefix = "BIRTHDAY50",
+                        DisplayName = "Birthday Bonus",
+                        Description = "50,000 VND off on your birthday",
+                        DiscountAmount = 50000,
+                        DiscountType = DiscountType.Fixed,
+                        ValidDays = 3,
                         AutoIssue = true,
-                        RuleJson = "{ \"date.isHoliday\": true }",
-                        CreatedAt = DateTime.UtcNow
+                        RuleJson = "{ \"==\": [ { \"var\": \"user.birthMonth\" }, { \"var\": \"currentMonth\" } ] }",
+                        CreatedAt = DateTime.UtcNow,
+                        ExpiryDate = DateTime.UtcNow.AddDays(3)
                     }
                 };
 
                 await context.VoucherTemplates.AddRangeAsync(templates);
                 await context.SaveChangesAsync();
 
-                // Add vouchers for first template
-                var template = templates[0]; // WELCOME10
-                var vouchers = new List<VoucherEntity>
-                {
-                    new VoucherEntity
-                    {
-                        Code = "WELCOME10-USER123",
-                        Amount = 10,
-                        IsRedeemed = false,
-                        ExpiryDate = DateTime.UtcNow.AddDays(template.ValidDays),
-                        TemplateId = template.Id
-                    },
-                    new VoucherEntity
-                    {
-                        Code = "WELCOME10-USER456",
-                        Amount = 10,
-                        IsRedeemed = true,
-                        ExpiryDate = DateTime.UtcNow.AddDays(template.ValidDays),
-                        TemplateId = template.Id
-                    }
-                };
-
-                await context.Vouchers.AddRangeAsync(vouchers);
+                var template = templates[0];
                 await context.SaveChangesAsync();
             }
         }

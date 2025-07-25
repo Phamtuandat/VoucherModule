@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using AuthenticationAPI.Models;
+using AuthenticationAPI.Services;
+using BuildingBlocks.Messaging;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -47,7 +50,8 @@ builder.Services.AddAuthorization(options =>
 
 });
 
-
+// Add masstransit from BuildingBlocks.Messaging package
+builder.Services.AddRabbitMqWithConsumers(cfg =>{}, builder.Configuration);
 // 🔧 Dependency Injection
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
@@ -64,7 +68,7 @@ var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 🧪 Seed endpoint for development/testing
+// Seed endpoint for development/testing
 app.MapGet("/seed", async (IHost host) =>
 {
     await host.EnsureDatabaseMigratedAndSeeded();
@@ -73,14 +77,15 @@ app.MapGet("/seed", async (IHost host) =>
     var users = await db.Users.ToListAsync();
     return Results.Ok(users);
 }).AllowAnonymous();
-
+// Clear seed endpoint for development/testing
 app.MapGet("/clearSeed", async (IHost host) =>
 {
     await host.ClearSeedData();
     return Results.Ok("Seed data has been cleared.");
 }).AllowAnonymous();
 
-
+// 🔑 Authentication endpoints
+// Login endpoint
 app.MapPost("/login", async (
     [FromBody] UserLoginRequest login,
     IUserService userService,
@@ -100,7 +105,6 @@ app.MapPost("/login", async (
     if (!isValid)
     {
         Console.WriteLine("❌ Invalid password.");
-        Console.WriteLine(login.Password, user.PasswordHash);
 
         return Results.Unauthorized();
     }
@@ -117,6 +121,83 @@ app.MapPost("/login", async (
 
     return Results.Json(new { token });
 }).AllowAnonymous();
+// Register endpoint
+app.MapPost("/register", async (
+    [FromBody] UserRegisterRequest model,
+    IUserService userService,
+    ITokenService tokenService) =>
+{
+    if (model == null)
+        return Results.BadRequest("Invalid payload");
+
+    // Check if user already exists
+    var existingUser = await userService.GetByUsernameAsync(model.Username);
+    if (existingUser != null)
+        return Results.Conflict("Username already exists");
+
+    // Map and create
+    var user = UserMapper.ToEntity(model);
+    var createdUser = await userService.CreateAsync(user, model.Password);
+
+    // Optional: generate token after registration
+    var token = tokenService.GenerateToken(createdUser.Id.ToString(), createdUser.Username, createdUser.Role, DateTime.UtcNow.AddHours(1));
+
+    return Results.Ok(new
+    {
+        Message = "Registration successful",
+        User = new
+        {
+            createdUser.Id,
+            createdUser.Username,
+            createdUser.Email,
+            createdUser.Role
+        },
+        Token = token
+    });
+}).AllowAnonymous();
+// Refresh token endpoint
+app.MapPost("/refresh", async (
+    [FromBody] RefreshTokenRequest req,
+    IUserService userService,
+    ITokenService tokenService) =>
+{
+    if (string.IsNullOrWhiteSpace(req.RefreshToken))
+        return Results.BadRequest("Refresh token is required.");
+
+    var storedToken = await userService.GetValidRefreshTokenAsync(req.RefreshToken);
+
+    if (storedToken == null ||
+        storedToken.IsUsed ||
+        storedToken.IsRevoked ||
+        storedToken.ExpiryDate <= DateTime.UtcNow)
+    {
+        return Results.Unauthorized(); // Token invalid or expired
+    }
+
+    // Invalidate the used token (prevent reuse)
+    await userService.InvalidateRefreshTokenAsync(storedToken.Token);
+
+    // Fetch user from token
+    var user = storedToken.User;
+
+    // Generate new tokens
+    var newAccessToken = tokenService.GenerateToken(
+        user.Id.ToString(),
+        user.Username,
+        user.Role,
+        DateTime.UtcNow.AddMinutes(15) // Access token lifetime
+    );
+
+    var newRefreshToken = await userService.CreateRefreshTokenAsync(user);
+
+    return Results.Ok(new
+    {
+        accessToken = newAccessToken,
+        refreshToken = newRefreshToken.Token
+    });
+}).AllowAnonymous();
+
+// 🧑‍🤝‍🧑 User management endpoints
 app.MapGet("/users", async (IUserService userService) =>
 {
     var users = await userService.GetAllUsersAsync();

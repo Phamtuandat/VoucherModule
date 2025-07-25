@@ -14,6 +14,9 @@ services:
       - Jwt__Key=${JWT_KEY}
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=${JWT_AUDIENCE}
+      - RabbitMq__Host=${RABBITMQ_HOST}
+      - RabbitMq__Username=${RABBITMQ_USERNAME}
+      - RabbitMq__Password=${RABBITMQ_PASSWORD}
     depends_on:
       - sqlserver
     networks:
@@ -59,12 +62,42 @@ services:
       - Jwt__Key=${JWT_KEY}
       - Jwt__Issuer=${JWT_ISSUER}
       - Jwt__Audience=${JWT_AUDIENCE}
+      - RabbitMq__Host=${RABBITMQ_HOST}
+      - RabbitMq__Username=${RABBITMQ_USERNAME}
+      - RabbitMq__Password=${RABBITMQ_PASSWORD}
     depends_on:
       - postgres
     ports:
       - "5001:80"
     networks:
       - voucher-network
+
+  sagaservice:
+    image: ${DOCKER_REGISTRY-}sagaservice
+    build:
+      context: .
+      dockerfile: Services/SagaService/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - RabbitMq__Host=${RABBITMQ_HOST}
+      - RabbitMq__Username=${RABBITMQ_USERNAME}
+      - RabbitMq__Password=${RABBITMQ_PASSWORD}
+    depends_on:
+      - rabbitmq
+    networks:
+      - voucher-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # Web UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - voucher-network
+
 
 volumes:
   sqlserver_data:

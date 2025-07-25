@@ -6,5 +6,8 @@ using System.Threading.Tasks;
 
 namespace BuildingBlocks.Contract.UserEvents
 {
-    public record UserRegistered(string UserId, string Email, string FullName);
+    public record UserRegistered(Guid UserId, string Email, string FullName)
+    {
+        public string? Username { get; set; }
+    }
 }
