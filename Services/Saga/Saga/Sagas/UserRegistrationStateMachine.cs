@@ -15,8 +15,8 @@ namespace SagaService.Sagas
         {
             InstanceState(x => x.CurrentState);
 
-            Event(() => UserRegisteredEvent, x => x.CorrelateById(context => context.Message.UserId));
-            Event(() => VoucherIssuedEvent, x => x.CorrelateById(context => context.Message.UserId)); 
+            Event(() => UserRegisteredEvent, x => x.CorrelateById(context => context.Message.CorrelationId));
+            Event(() => VoucherIssuedEvent, x => x.CorrelateById(context => context.Message.CorrelationId));
 
             Initially(
                 When(UserRegisteredEvent)
@@ -24,12 +24,10 @@ namespace SagaService.Sagas
                     {
                         context.Saga.UserId = context.Message.UserId; // Updated to use 'Saga' instead of 'Instance'
                         context.Saga.Email = context.Message.Email;   // Updated to use 'Message' instead of 'Data'
-                        context.Saga.Username = context.Message.Username;
                         context.Saga.CreatedAt = DateTime.UtcNow;
 
                         // Call the voucher service (via MassTransit request or publish)
-                        await context.Publish(new VoucherIssue(context.Message.UserId,
-                            "WELCOME"));
+                        await context.Publish(new WelcomeVoucherIssue(context.Message.UserId, "WELCOME10"));
                     })
                     .TransitionTo(AwaitingVoucher)
             );

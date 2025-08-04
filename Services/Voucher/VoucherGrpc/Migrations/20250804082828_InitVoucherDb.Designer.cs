@@ -12,8 +12,8 @@ using VoucherGrpc.Data;
 namespace VoucherGrpc.Migrations
 {
     [DbContext(typeof(VoucherDbContext))]
-    [Migration("20250724035824_improveVoucherBehaviour")]
-    partial class improveVoucherBehaviour
+    [Migration("20250804082828_InitVoucherDb")]
+    partial class InitVoucherDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -59,6 +59,9 @@ namespace VoucherGrpc.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<Guid>("TemplateId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");

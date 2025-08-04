@@ -14,7 +14,7 @@ namespace VoucherGrpc.Models
 
         [Range(0.01, (double)decimal.MaxValue)] // Fix: Cast decimal.MaxValue to double
         public decimal Amount { get; set; }
-
+        public Guid? UserId { get; set; }
         public bool IsPublic { get; set; }
 
         public bool IsRedeemed { get; set; }

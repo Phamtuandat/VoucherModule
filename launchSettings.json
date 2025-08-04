@@ -5,7 +5,8 @@
       "commandVersion": "1.0",
       "serviceActions": {
         "authenticationapi": "StartDebugging",
-        "vouchergrpc": "StartDebugging"
+        "vouchergrpc": "StartDebugging",
+        "sagaservice": "StartDebugging"
       }
     }
   }

@@ -1,9 +1,11 @@
-﻿using AuthenticationAPI.Models;
+﻿using AuthenticationAPI.Data.DatabaseExtensions;
+using AuthenticationAPI.Models;
 using AuthenticationAPI.Services;
 using BuildingBlocks.Messaging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -11,8 +13,14 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // 🧱 Configure EF Core with SQL Server
-builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddScoped<UserCreatedInterceptor>(); // Register the interceptor for user creation events
+builder.Services.AddDbContext<AuthDbContext>((serviceProvider, options) =>
+    {
+        
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+        options.AddInterceptors(serviceProvider.GetRequiredService<UserCreatedInterceptor>());
+    }
+);
 
 // 🔐 Bind and configure JWT settings
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));

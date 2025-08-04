@@ -5,3 +5,6 @@ global using Microsoft.EntityFrameworkCore;
 global using AuthenticationAPI.Enums;
 global using AuthenticationAPI.Settings;
 global using AuthenticationAPI.Extensions;
+global using MassTransit;
+global using Microsoft.EntityFrameworkCore.Diagnostics;
+global using BuildingBlocks.Contract.UserEvents;

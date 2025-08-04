@@ -17,7 +17,7 @@ namespace VoucherGrpc.Extensions
                         DisplayName = "Welcome Discount",
                         Description = "10% off for new users",
                         DiscountAmount = 10,
-                        DiscountType = DiscountType.Percent, 
+                        DiscountType = DiscountType.Percent,
                         ValidDays = 7,
                         AutoIssue = true,
                         RuleJson = "{ \"user.isNew\": true }", 

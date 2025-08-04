@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using VoucherGrpc.Consumer;
 using VoucherGrpc.Middlewares;
 using VoucherGrpc.Services;
 
@@ -68,7 +69,7 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddRabbitMqWithConsumers(cfg =>
 {
-    cfg.AddConsumer<UserRegisteredConsumer>();
+    cfg.AddConsumer<WelcomeVoucherIssueConsumer>();
 }, builder.Configuration);
 builder.WebHost.ConfigureKestrel(options =>
 {

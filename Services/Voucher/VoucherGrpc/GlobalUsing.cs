@@ -8,7 +8,5 @@ global using Microsoft.AspNetCore.Authorization;
 global using MassTransit;
 global using BuildingBlocks.Messaging;
 global using BuildingBlocks.RuleEngine;
-global using BuildingBlocks.Contract.UserEvents;
 global using BuildingBlocks.Contract.VoucherEvents;
-global using VoucherGrpc.Consumers;
 global using VoucherGrpc.Enums;

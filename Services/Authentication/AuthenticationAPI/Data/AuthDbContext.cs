@@ -1,15 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BuildingBlocks.Contract.UserEvents;
+using MassTransit;
 
 namespace AuthenticationAPI.Data
 {
     public class AuthDbContext : DbContext
     {
-        public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options)
+        private readonly IPublishEndpoint _publish;
+        public AuthDbContext(DbContextOptions<AuthDbContext> options, IPublishEndpoint publish) : base(options)
         {
+            _publish = publish;
         }
-        public DbSet<User> Users { get; set; }
-
-        public DbSet<RefreshToken> RefreshTokens { get; set; }
+        public DbSet<User> Users => Set<User>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     }
 }

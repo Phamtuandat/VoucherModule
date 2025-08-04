@@ -1,13 +1,12 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace VoucherGrpc.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitVoucherDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,13 +16,15 @@ namespace VoucherGrpc.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: false),
                     CodePrefix = table.Column<string>(type: "text", nullable: false),
-                    DiscountAmount = table.Column<double>(type: "double precision", nullable: false),
-                    DiscountType = table.Column<string>(type: "text", nullable: false),
+                    DiscountAmount = table.Column<decimal>(type: "numeric", nullable: false),
+                    DiscountType = table.Column<int>(type: "integer", nullable: false),
                     ValidDays = table.Column<int>(type: "integer", nullable: false),
                     RuleJson = table.Column<string>(type: "text", nullable: false),
                     AutoIssue = table.Column<bool>(type: "boolean", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ExpiryDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     DisplayName = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
@@ -35,12 +36,16 @@ namespace VoucherGrpc.Migrations
                 name: "Vouchers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Code = table.Column<string>(type: "text", nullable: false),
-                    Amount = table.Column<double>(type: "double precision", nullable: false),
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Amount = table.Column<decimal>(type: "numeric", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    IsPublic = table.Column<bool>(type: "boolean", nullable: false),
                     IsRedeemed = table.Column<bool>(type: "boolean", nullable: false),
                     ExpiryDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    RedeemedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    RedeemedByUserId = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     TemplateId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>

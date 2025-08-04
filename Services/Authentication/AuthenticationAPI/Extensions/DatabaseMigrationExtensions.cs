@@ -27,14 +27,20 @@ namespace AuthenticationAPI.Extensions
                         Username = "yummyadmin",
                         PasswordHash = PasswordHasher.HashPassword("admin123"),
                         Role = UserRole.Admin,
-                        Email = "yummyadmin@test.example"
+                        Email = "yummyadmin@test.example",
+                        FirstName = "Yummy",
+                        LastName = "Admin",
+                        BirthDate = DateTime.UtcNow.AddYears(-30) // Example birth date
                     },
                     new User
                     {
                         Username = "yummyuser",
                         PasswordHash = PasswordHasher.HashPassword("user123"),
                         Role = UserRole.User,
-                        Email = "yummyuser@test.example"
+                        Email = "yummyuser@test.example",
+                        FirstName = "Yummy",
+                        LastName = "User",
+                        BirthDate = DateTime.UtcNow.AddYears(-25) // Example birth date
                     }
                 };
 
