@@ -18,6 +18,7 @@ builder.Services.AddLogging(logging =>
 builder.Services.AddDbContext<VoucherDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddScoped<IVoucherTemplateService, VoucherTemplateService>();
 builder.Services.AddScoped<IVoucherService, VoucherService>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -77,6 +78,8 @@ builder.WebHost.ConfigureKestrel(options =>
 });
 
 var app = builder.Build();
+// Ensure database is migrated and seeded
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseMiddleware<LoggingTokenClaimsMiddleware>();

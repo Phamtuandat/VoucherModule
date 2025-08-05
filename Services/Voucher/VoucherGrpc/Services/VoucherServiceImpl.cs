@@ -10,10 +10,12 @@ namespace VoucherGrpc.Services
     public class VoucherServiceImpl : Voucher.VoucherBase
     {
         private readonly VoucherDbContext _context;
+        private readonly ILogger<VoucherServiceImpl> _logger;
 
-        public VoucherServiceImpl(VoucherDbContext context)
+        public VoucherServiceImpl(VoucherDbContext context, ILogger<VoucherServiceImpl> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public override async Task<VoucherResponse> CreateVoucher(CreateVoucherRequest request, ServerCallContext context)
@@ -116,8 +118,9 @@ namespace VoucherGrpc.Services
             var vouchers = await _context.Vouchers
                 .Where(v => v.RedeemedByUserId == request.UserId)
                 .ToListAsync();
-
+            _logger.LogInformation("Fetched {Count} vouchers for user {UserId}", vouchers.Count, request.UserId);
             var response = new VoucherListResponse();
+            
             foreach (var voucher in vouchers)
             {
                 response.Vouchers.Add(new VoucherResponse
@@ -139,8 +142,8 @@ namespace VoucherGrpc.Services
         {
             try
             {
-                await _context.Database.MigrateAsync();
-
+                // Ensure database is created and seeded
+                await DbSeeder.EnsureDatabaseCreatedAsync(_context);
                 if (!_context.Vouchers.Any())
                 {
                     await DbSeeder.SeedAsync(_context);

@@ -1,13 +1,13 @@
-﻿namespace VoucherGrpc.Services
-{
-    public class VoucherService : IVoucherService
-    {
-        private readonly VoucherDbContext _context;
+﻿using Newtonsoft.Json;
 
-        public VoucherService(VoucherDbContext context)
-        {
-            _context = context;
-        }
+namespace VoucherGrpc.Services
+{
+    public class VoucherService(ILogger<VoucherService> logger, VoucherDbContext context) : IVoucherService
+    {
+        private readonly VoucherDbContext _context = context;
+        private readonly ILogger<VoucherService> _logger = logger;
+
+
 
         public async Task<bool> HasVoucher(string userId, Guid templateId)
         {
@@ -18,10 +18,26 @@
         public async Task<VoucherEntity?> IssueVoucherAsync(string userId, VoucherTemplate template, object ruleContext)
         {
             if (!RuleEvaluator.Evaluate(template.RuleJson, ruleContext))
+            {
+                var result = RuleEvaluator.Evaluate(template.RuleJson, ruleContext);
+                var isBool = result is bool;
+                RuleDebugger.Debug(template.RuleJson, ruleContext);
+
+                _logger.LogWarning(
+                    "Rule evaluation failed. Result: {Result}, Type: {Type}, Rule: {Rule}, Context: {Context}",
+                    result,
+                    result.GetType().Name,
+                    template.RuleJson, 
+                    JsonConvert.SerializeObject(ruleContext)  
+                );
                 return null;
+            };
 
             if (await HasVoucher(userId, template.Id))
+            {
+                _logger.LogWarning("User {UserId} already has a voucher for template {TemplateId}", userId, template.Id);
                 return null;
+            };
 
             var voucher = new VoucherEntity
             {

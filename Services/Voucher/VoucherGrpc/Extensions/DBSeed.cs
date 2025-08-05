@@ -6,6 +6,7 @@ namespace VoucherGrpc.Extensions
     {
         public static async Task SeedAsync(VoucherDbContext context)
         {
+
             if (!context.VoucherTemplates.Any())
             {
                 var templates = new List<VoucherTemplate>
@@ -20,7 +21,7 @@ namespace VoucherGrpc.Extensions
                         DiscountType = DiscountType.Percent,
                         ValidDays = 7,
                         AutoIssue = true,
-                        RuleJson = "{ \"user.isNew\": true }", 
+                        RuleJson = "{ \"==\": [ { \"var\": \"user.isNew\" }, true ] }",
                         CreatedAt = DateTime.UtcNow,
                         ExpiryDate = DateTime.UtcNow.AddDays(7)
                     },
@@ -46,6 +47,14 @@ namespace VoucherGrpc.Extensions
                 var template = templates[0];
                 await context.SaveChangesAsync();
             }
+        }
+        public static async Task EnsureDatabaseCreatedAsync(VoucherDbContext context)
+        {
+            if (!await context.Database.EnsureCreatedAsync())
+            {
+                throw new Exception("Failed to create or connect to the database.");
+            }
+            await SeedAsync(context);
         }
     }
 }

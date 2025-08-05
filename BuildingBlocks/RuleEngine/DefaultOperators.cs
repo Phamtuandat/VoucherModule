@@ -26,7 +26,28 @@ namespace BuildingBlocks.RuleEngine
                 ["and"] = (logic, args, data) =>
                 {
                     return args.All(arg => Convert.ToBoolean(logic.Apply(arg, data)));
+                },
+                ["var"] = (logic, args, data) =>
+                {
+                    if (args.Length == 0)
+                        return data;
+
+                    var path = logic.Apply(args[0], data)?.ToString();
+                    if (string.IsNullOrEmpty(path))
+                        return data;
+
+                    // Duyệt theo đường dẫn "user.isNew" → data["user"]["isNew"]
+                    var token = JToken.FromObject(data);
+                    var parts = path.Split('.');
+                    foreach (var part in parts)
+                    {
+                        if (token == null) break;
+                        token = token[part];
+                    }
+
+                    return token?.ToObject<object>();
                 }
+
                 // Add more as needed
             };
         }

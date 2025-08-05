@@ -9,7 +9,7 @@
         public string? Username { get; set; }
 
         public DateTime RegisteredAt { get; set; }
-        public DateTime CreatedAt { get; internal set; }
-        public string Email { get; internal set; }
+        public DateTime CreatedAt { get;  set; } = DateTime.UtcNow;
+        public string Email { get;  set; } = null!;
     }
 }

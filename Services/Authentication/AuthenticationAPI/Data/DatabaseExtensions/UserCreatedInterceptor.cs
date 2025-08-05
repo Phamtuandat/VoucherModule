@@ -7,23 +7,29 @@ namespace AuthenticationAPI.Data.DatabaseExtensions
         private readonly IPublishEndpoint _publish = publish;
         private readonly ILogger<UserCreatedInterceptor> _logger = logger;
 
-        public override async ValueTask<int> SavedChangesAsync(SaveChangesCompletedEventData eventData, int result, CancellationToken cancellationToken = default)
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+             DbContextEventData eventData,
+             InterceptionResult<int> result,
+             CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("✅ UserCreatedInterceptor invoked");
+            _logger.LogInformation("✅ UserCreatedInterceptor SavingChangesAsync invoked");
 
-            var context = eventData.Context;
-            if (context is AuthDbContext authDbContext)
+            if (eventData.Context is AuthDbContext authDbContext)
             {
                 var users = authDbContext.ChangeTracker.Entries<User>()
                     .Where(e => e.State == EntityState.Added)
-                    .Select(e => e.Entity);
+                    .Select(e => e.Entity)
+                    .ToList();
+
                 foreach (var user in users)
                 {
-                    _logger.LogInformation("Publishing UserRegistered event for user: {UserId}", user.Id);
-                    await _publish.Publish(new UserRegistered(user.Id, user.Email, user.FirstName + user.LastName), cancellationToken);
+                    var message = new UserRegistered(user.Id, user.Email, user.FirstName + user.LastName);
+                    await _publish.Publish(message, cancellationToken);
+                    _logger.LogInformation("✅ UserRegistered event queued for user: {CorrelationId}", message.CorrelationId);
                 }
             }
-            return await base.SavedChangesAsync(eventData, result, cancellationToken);
+
+            return await base.SavingChangesAsync(eventData, result, cancellationToken);
         }
     }
 }

@@ -13,7 +13,7 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // 🧱 Configure EF Core with SQL Server
-builder.Services.AddScoped<UserCreatedInterceptor>(); // Register the interceptor for user creation events
+builder.Services.AddScoped<UserCreatedInterceptor>();
 builder.Services.AddDbContext<AuthDbContext>((serviceProvider, options) =>
     {
         
@@ -34,11 +34,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = jwtSettings.Issuer,
+            ValidIssuer = jwtSettings?.Issuer,
             ValidateAudience = true,
-            ValidAudience = jwtSettings.Audience,
+            ValidAudience = jwtSettings?.Audience,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings?.Key ?? "developemt-test-key")),
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero // precise expiration
         };

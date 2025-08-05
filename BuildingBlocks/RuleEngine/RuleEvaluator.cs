@@ -1,4 +1,5 @@
 ﻿using JsonLogic.Net;
+using Newtonsoft.Json.Linq;
 
 namespace BuildingBlocks.RuleEngine;
 
@@ -8,7 +9,7 @@ public static class RuleEvaluator
 
     public static bool Evaluate(string ruleJson, object dataContext)
     {
-        var result = Evaluator.Apply(ruleJson, dataContext);
+        var result = Evaluator.Apply(JToken.Parse(ruleJson), dataContext);
         return result is bool boolean && boolean;
     }
 }
